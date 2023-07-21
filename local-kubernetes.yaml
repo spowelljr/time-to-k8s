@@ -1,4 +1,4 @@
 testcases:
   minikube:
-    setup: minikube start --memory=5000 --cpus=max
+    setup: minikube start --memory=max --cpus=max --container-runtime=containerd --cni=bridge
     teardown: minikube delete
