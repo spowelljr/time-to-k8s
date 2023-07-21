@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -227,6 +228,7 @@ func runIteration(name string, setupCmd string, cleanupCmd string) (e Experiment
 	}
 	e.AppRunning += rr.Duration
 
+	go tryFast(ctx, extraArgs)
 	args = append(extraArgs, "exec", "deployment/netcat", "--", "nslookup", "netcat.default")
 	rr, err = RetryRun(exec.CommandContext(ctx, "kubectl", args...))
 	if err != nil {
@@ -244,6 +246,14 @@ func runIteration(name string, setupCmd string, cleanupCmd string) (e Experiment
 	}
 
 	return e, nil
+}
+
+func tryFast(ctx context.Context, extraArgs []string) {
+	args := append(extraArgs, "exec", "deployment/netcat", "--", "nslookup", "-timeout=1", "-retry=1", "netcat.default")
+	_, err := RetryRun(exec.CommandContext(ctx, "kubectl", args...))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
